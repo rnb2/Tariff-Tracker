@@ -23,7 +23,7 @@ export default function RatesView({ rates, setRates }) {
             </label>
             <div className="flex items-center gap-3">
               <input 
-                type="number" 
+                type="number" step="any" 
                 value={rates[type]}
                 onChange={(e) => handleRateChange(type, e.target.value)}
                 className="w-full rounded-lg border border-slate-200 px-4 py-2 text-lg font-bold text-blue-600 focus:border-blue-500 outline-none"

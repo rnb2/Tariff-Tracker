@@ -1,9 +1,22 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { UTILITY_TYPES, LABELS, UNITS } from '../constants';
 import { calculateUtilitySum, formatCurrency, exportToPDF } from '../utils';
 import { Save, Plus, Trash2, FileDown } from 'lucide-react';
 
 export default function InputView({ draft, setDraft, rates, onSave }) {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      await exportToPDF({ ...draft, total }, LABELS);
+    } catch (e) {
+      console.error(e);
+      alert('Ошибка при генерации PDF');
+    } finally {
+      setIsExporting(false);
+    }
+  };
   
   const handleUtilityChange = (type, field, value) => {
     const numValue = value === '' ? '' : parseFloat(value);
@@ -84,11 +97,12 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
         </div>
         <div className="flex gap-2">
           <button 
-            onClick={() => exportToPDF({ ...draft, total }, LABELS)}
-            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            <FileDown size={18} />
-            PDF
+            <FileDown size={18} className={isExporting ? 'animate-pulse text-blue-600' : ''} />
+            {isExporting ? 'Экспорт...' : 'PDF'}
           </button>
           <button 
             onClick={handleSave}
@@ -117,7 +131,7 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
                   </div>
                   <div className="sm:col-span-1">
                     <input 
-                      type="number" 
+                      type="number" step="any" 
                       placeholder="Пред."
                       value={draft.utilities[type].previous}
                       onChange={(e) => handleUtilityChange(type, 'previous', e.target.value)}
@@ -126,7 +140,7 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
                   </div>
                   <div className="sm:col-span-1">
                     <input 
-                      type="number" 
+                      type="number" step="any" 
                       placeholder="Тек."
                       value={draft.utilities[type].current}
                       onChange={(e) => handleUtilityChange(type, 'current', e.target.value)}
@@ -135,7 +149,7 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
                   </div>
                   <div className="sm:col-span-1">
                     <input 
-                      type="number" 
+                      type="number" step="any" 
                       placeholder="Сумма"
                       value={draft.utilities[type].sum}
                       onChange={(e) => handleManualSumChange(type, e.target.value)}
@@ -157,7 +171,7 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
                 <div>
                   <label className="text-xs font-semibold text-slate-500 uppercase">Паркоместо</label>
                   <input 
-                    type="number" 
+                    type="number" step="any" 
                     value={draft.parking}
                     onChange={(e) => setDraft({ ...draft, parking: e.target.value })}
                     className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 outline-none"
@@ -167,7 +181,7 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
                   <div key={idx}>
                     <label className="text-xs font-semibold text-slate-500 uppercase">{m.name}</label>
                     <input 
-                      type="number" 
+                      type="number" step="any" 
                       value={m.amount}
                       onChange={(e) => {
                         const newM = [...draft.mortgages];
@@ -205,7 +219,7 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
                       className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:border-blue-500 outline-none"
                     />
                     <input 
-                      type="number" 
+                      type="number" step="any" 
                       placeholder="Сумма"
                       value={card.amount}
                       onChange={(e) => updateCreditCard(idx, 'amount', e.target.value)}
