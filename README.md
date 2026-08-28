@@ -41,3 +41,5 @@ If you are developing a production application, we recommend using TypeScript wi
    - Icons: Lucide React
    - PDF Generation: jsPDF + AutoTable
    
+## run
+npm run dev
