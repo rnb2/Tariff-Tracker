@@ -34,6 +34,42 @@ export const buildDraftFromEntry = (entry, utilityTypes) => {
   };
 };
 
+export const buildEntryDetailRows = (entry, labels) => {
+  const rows = [];
+
+  Object.entries(entry?.utilities || {}).forEach(([key, val]) => {
+    rows.push({
+      'Услуга': labels[key] || key,
+      'Пред. показ.': val.previous !== '' && val.previous !== undefined ? val.previous : '',
+      'Тек. показ.': val.current !== '' && val.current !== undefined ? val.current : '',
+      'Сумма': Number(val.sum) || 0,
+    });
+  });
+
+  const parkingVal = Number(entry?.parking) || 0;
+  if (parkingVal) {
+    rows.push({ 'Услуга': labels.PARKING || 'Паркоместо', 'Пред. показ.': '', 'Тек. показ.': '', 'Сумма': parkingVal });
+  }
+
+  (entry?.mortgages || []).forEach((m) => {
+    const amount = Number(m.amount) || 0;
+    if (amount) {
+      rows.push({ 'Услуга': m.name || labels.MORTGAGE || 'Ипотека', 'Пред. показ.': '', 'Тек. показ.': '', 'Сумма': amount });
+    }
+  });
+
+  (entry?.creditCards || []).forEach((c) => {
+    const amount = Number(c.amount) || 0;
+    if (amount) {
+      rows.push({ 'Услуга': c.name || 'Карта', 'Пред. показ.': '', 'Тек. показ.': '', 'Сумма': amount });
+    }
+  });
+
+  rows.push({ 'Услуга': 'ИТОГО', 'Пред. показ.': '', 'Тек. показ.': '', 'Сумма': Number(entry?.total) || 0 });
+
+  return rows;
+};
+
 export const formatCurrency = (amount) => {
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
@@ -60,7 +96,9 @@ export const exportToCSV = (data, filename = 'history.csv') => {
     Object.values(item).map(escapeCSVValue).join(',')
   );
 
-  const csvContent = [headers, ...rows].join('\n');
+  // Prepend a UTF-8 BOM so Excel detects the encoding and renders
+  // Cyrillic text correctly instead of mojibake.
+  const csvContent = '﻿' + [headers, ...rows].join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
