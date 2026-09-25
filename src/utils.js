@@ -15,6 +15,25 @@ export const calculateUtilitySum = (current, previous, rate) => {
   return Math.round((diff * numRate) * 100) / 100;
 };
 
+export const buildDraftFromEntry = (entry, utilityTypes) => {
+  const utilities = {};
+  utilityTypes.forEach((type) => {
+    const prevData = entry?.utilities?.[type];
+    const previous = prevData && prevData.current !== '' && prevData.current !== undefined
+      ? prevData.current
+      : (prevData?.previous ?? '');
+    utilities[type] = { previous, current: '', sum: 0 };
+  });
+
+  return {
+    date: new Date().toISOString().split('T')[0],
+    utilities,
+    parking: entry?.parking ?? '',
+    creditCards: (entry?.creditCards || []).map((c) => ({ name: c.name, amount: c.amount ?? '' })),
+    mortgages: (entry?.mortgages || []).map((m) => ({ name: m.name, amount: m.amount ?? '' })),
+  };
+};
+
 export const formatCurrency = (amount) => {
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
