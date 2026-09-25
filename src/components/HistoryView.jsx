@@ -1,9 +1,8 @@
-import React from 'react';
 import { formatCurrency, exportToCSV } from '../utils';
-import { Trash2, Download, ExternalLink } from 'lucide-react';
+import { Trash2, Download, Copy } from 'lucide-react';
 import { LABELS } from '../constants';
 
-export default function HistoryView({ history, setHistory }) {
+export default function HistoryView({ history, setHistory, onUseAsTemplate }) {
   const deleteEntry = (id) => {
     if (window.confirm('Удалить эту запись?')) {
       setHistory(history.filter(e => e.id !== id));
@@ -74,7 +73,14 @@ export default function HistoryView({ history, setHistory }) {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button 
+                        <button
+                          onClick={() => onUseAsTemplate?.(entry)}
+                          title="Заполнить новый расчёт данными этой записи"
+                          className="rounded-lg p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        >
+                          <Copy size={18} />
+                        </button>
+                        <button
                           onClick={() => deleteEntry(entry.id)}
                           className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                         >

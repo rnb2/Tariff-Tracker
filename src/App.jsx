@@ -1,15 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { UTILITY_TYPES, INITIAL_RATES, LABELS } from './constants';
-import { calculateUtilitySum } from './utils';
-import { 
-  LayoutDashboard, 
-  History as HistoryIcon, 
-  Settings, 
-  FileText, 
-  Plus, 
-  Trash2, 
-  Download,
+import { UTILITY_TYPES, INITIAL_RATES } from './constants';
+import { buildDraftFromEntry } from './utils';
+import {
+  History as HistoryIcon,
+  Settings,
+  FileText,
+  Plus,
   PieChart as PieChartIcon
 } from 'lucide-react';
 
@@ -19,21 +16,29 @@ import HistoryView from './components/HistoryView';
 import ChartsView from './components/ChartsView';
 import RatesView from './components/RatesView';
 
+const createEmptyDraft = () => ({
+  date: new Date().toISOString().split('T')[0],
+  utilities: Object.values(UTILITY_TYPES).reduce((acc, type) => ({
+    ...acc,
+    [type]: { current: '', previous: '', sum: 0 }
+  }), {}),
+  parking: '',
+  creditCards: [{ name: 'Моно', amount: '' }, { name: 'ПУМБ', amount: '' }],
+  mortgages: [{ name: 'ДержМолодь', amount: '' }],
+});
+
 function App() {
   const [activeTab, setActiveTab] = useState('input');
   const [rates, setRates] = useLocalStorage('utility_rates', INITIAL_RATES);
   const [history, setHistory] = useLocalStorage('utility_history', []);
-  
-  const [currentDraft, setCurrentDraft] = useState({
-    date: new Date().toISOString().split('T')[0],
-    utilities: Object.values(UTILITY_TYPES).reduce((acc, type) => ({
-      ...acc,
-      [type]: { current: '', previous: '', sum: 0 }
-    }), {}),
-    parking: '',
-    creditCards: [{ name: 'Моно', amount: '' }, { name: 'ПУМБ', amount: '' }],
-    mortgages: [{ name: 'ДержМолодь', amount: '' }],
-  });
+
+  // Pre-fill the input form from the most recent saved entry, so meter
+  // "previous" readings and recurring payments carry over automatically.
+  const [currentDraft, setCurrentDraft] = useState(() =>
+    history.length > 0
+      ? buildDraftFromEntry(history[0], Object.values(UTILITY_TYPES))
+      : createEmptyDraft()
+  );
 
   const tabs = [
     { id: 'input', label: 'Ввод', icon: Plus },
@@ -89,15 +94,27 @@ function App() {
       {/* Main Content */}
       <main className="mx-auto max-w-5xl p-4 md:p-8">
         {activeTab === 'input' && (
-          <InputView 
-            draft={currentDraft} 
-            setDraft={setCurrentDraft} 
-            rates={rates} 
-            onSave={(entry) => setHistory([entry, ...history])}
+          <InputView
+            draft={currentDraft}
+            setDraft={setCurrentDraft}
+            rates={rates}
+            onSave={(entry) => {
+              setHistory([entry, ...history]);
+              // Roll the form forward: next period's "previous" readings
+              // and recurring payments start from what was just saved.
+              setCurrentDraft(buildDraftFromEntry(entry, Object.values(UTILITY_TYPES)));
+            }}
           />
         )}
         {activeTab === 'history' && (
-          <HistoryView history={history} setHistory={setHistory} />
+          <HistoryView
+            history={history}
+            setHistory={setHistory}
+            onUseAsTemplate={(entry) => {
+              setCurrentDraft(buildDraftFromEntry(entry, Object.values(UTILITY_TYPES)));
+              setActiveTab('input');
+            }}
+          />
         )}
         {activeTab === 'charts' && (
           <ChartsView history={history} />
