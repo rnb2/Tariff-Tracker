@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { calculateUtilitySum, formatCurrency, exportToCSV, buildDraftFromEntry } from './utils';
+import { calculateUtilitySum, formatCurrency, exportToCSV, buildDraftFromEntry, buildEntryDetailRows } from './utils';
 
 describe('calculateUtilitySum', () => {
   it('multiplies the positive difference by the rate', () => {
@@ -67,6 +67,8 @@ describe('exportToCSV', () => {
 
   it('escapes values containing commas', async () => {
     const blob = captureCSV([{ name: 'Rent, Utilities', amount: 100 }]);
+    // Blob#text() decodes as UTF-8 per spec, which strips a leading BOM,
+    // so the BOM itself is verified separately via the raw bytes below.
     const text = await blob.text();
     expect(text).toBe('name,amount\n"Rent, Utilities",100');
   });
@@ -87,6 +89,15 @@ describe('exportToCSV', () => {
     const blob = captureCSV([{ name: 'Gas', amount: 42 }]);
     const text = await blob.text();
     expect(text).toBe('name,amount\nGas,42');
+  });
+
+  it('prepends a UTF-8 BOM so Excel renders Cyrillic correctly', async () => {
+    const blob = captureCSV([{ 'Услуга': 'Отопление', 'Сумма': 100 }]);
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    expect([bytes[0], bytes[1], bytes[2]]).toEqual([0xEF, 0xBB, 0xBF]);
+
+    const text = await blob.text();
+    expect(text).toContain('Отопление');
   });
 });
 
@@ -141,5 +152,34 @@ describe('buildDraftFromEntry', () => {
     expect(draft.creditCards).toEqual([]);
     expect(draft.mortgages).toEqual([]);
     expect(draft.date).toBe(new Date().toISOString().split('T')[0]);
+  });
+});
+
+describe('buildEntryDetailRows', () => {
+  const labels = { gas: 'Газ', PARKING: 'Паркоместо', MORTGAGE: 'Ипотека' };
+
+  it('includes one row per utility with its readings and sum', () => {
+    const entry = { utilities: { gas: { previous: 10, current: 25, sum: 45 } } };
+    const rows = buildEntryDetailRows(entry, labels);
+    expect(rows[0]).toEqual({ 'Услуга': 'Газ', 'Пред. показ.': 10, 'Тек. показ.': 25, 'Сумма': 45 });
+  });
+
+  it('adds parking, mortgage, and credit card rows only when their amount is non-zero', () => {
+    const entry = {
+      utilities: {},
+      parking: 500,
+      mortgages: [{ name: 'ДержМолодь', amount: 3000 }, { name: 'Empty', amount: 0 }],
+      creditCards: [{ name: 'Моно', amount: 1200 }, { name: 'ПУМБ', amount: 0 }],
+      total: 4700,
+    };
+    const rows = buildEntryDetailRows(entry, labels);
+    const names = rows.map((r) => r['Услуга']);
+    expect(names).toEqual(['Паркоместо', 'ДержМолодь', 'Моно', 'ИТОГО']);
+  });
+
+  it('always appends a final ИТОГО row with the entry total', () => {
+    const entry = { utilities: {}, total: 1234.56 };
+    const rows = buildEntryDetailRows(entry, labels);
+    expect(rows[rows.length - 1]).toEqual({ 'Услуга': 'ИТОГО', 'Пред. показ.': '', 'Тек. показ.': '', 'Сумма': 1234.56 });
   });
 });
