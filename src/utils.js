@@ -1,9 +1,18 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { ROBOTO_REGULAR_BASE64 } from './assets/robotoFont';
 
 export const calculateUtilitySum = (current, previous, rate) => {
-  const diff = Math.max(0, current - previous);
-  return Math.round((diff * rate) * 100) / 100;
+  const numCurrent = Number(current);
+  const numPrevious = Number(previous);
+  const numRate = Number(rate);
+
+  if (!Number.isFinite(numCurrent) || !Number.isFinite(numPrevious) || !Number.isFinite(numRate)) {
+    return 0;
+  }
+
+  const diff = Math.max(0, numCurrent - numPrevious);
+  return Math.round((diff * numRate) * 100) / 100;
 };
 
 export const formatCurrency = (amount) => {
@@ -14,16 +23,24 @@ export const formatCurrency = (amount) => {
   }).format(amount);
 };
 
+const escapeCSVValue = (val) => {
+  if (val === null || val === undefined) return '';
+
+  const str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
 export const exportToCSV = (data, filename = 'history.csv') => {
   if (!data || data.length === 0) return;
 
-  const headers = Object.keys(data[0]).join(',');
-  const rows = data.map((item) => 
-    Object.values(item).map(val => 
-      typeof val === 'string' ? `"${val}"` : val
-    ).join(',')
+  const headers = Object.keys(data[0]).map(escapeCSVValue).join(',');
+  const rows = data.map((item) =>
+    Object.values(item).map(escapeCSVValue).join(',')
   );
-  
+
   const csvContent = [headers, ...rows].join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -37,37 +54,16 @@ export const exportToCSV = (data, filename = 'history.csv') => {
   document.body.removeChild(link);
 };
 
-let cachedFontBase64 = null;
-
-const getFontBase64 = async () => {
-  if (cachedFontBase64) return cachedFontBase64;
-  
-  const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
-  const response = await fetch(fontUrl);
-  if (!response.ok) throw new Error('Failed to fetch Roboto-Regular font');
-  const arrayBuffer = await response.arrayBuffer();
-  
-  let binary = '';
-  const bytes = new Uint8Array(arrayBuffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  cachedFontBase64 = window.btoa(binary);
-  return cachedFontBase64;
-};
-
 export const exportToPDF = async (entry, labels) => {
   const doc = new jsPDF();
   let activeFont = 'Roboto';
-  
+
   try {
-    const base64Font = await getFontBase64();
-    doc.addFileToVFS('Roboto-Regular.ttf', base64Font);
+    doc.addFileToVFS('Roboto-Regular.ttf', ROBOTO_REGULAR_BASE64);
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.setFont('Roboto');
   } catch (error) {
-    console.error('Error loading font, Cyrillic might not render properly:', error);
+    console.error('Error loading bundled font, Cyrillic might not render properly:', error);
     activeFont = 'helvetica';
     doc.setFont('helvetica');
   }

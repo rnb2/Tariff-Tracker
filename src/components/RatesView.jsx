@@ -1,6 +1,4 @@
-import React from 'react';
 import { LABELS, UNITS, UTILITY_TYPES } from '../constants';
-import { Save } from 'lucide-react';
 
 export default function RatesView({ rates, setRates }) {
   const handleRateChange = (type, value) => {

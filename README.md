@@ -1,45 +1,64 @@
-# React + Vite
+# Tariff Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A single-page app for tracking household utility bills, rent, mortgage, and
+credit card payments. Enter meter readings each month, get the total due
+calculated automatically from configurable tariffs, and review history with
+charts. All data is stored locally in the browser — nothing is sent to a
+server.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Meter entry** — heating, electricity (day/night), water, gas, rent, with
+  automatic sum calculation from current/previous readings and per-unit rates.
+- **Other payments** — parking, mortgage installments, and a dynamic list of
+  credit card payments.
+- **History** — browse and manage past entries.
+- **Charts** — spending trend over time and cost distribution by category
+  (Recharts).
+- **Export** — download history as CSV, or a single entry as a PDF receipt
+  (with Cyrillic support).
+- **Configurable tariffs** — set your own rate per unit for each utility.
 
-## React Compiler
+## Data & privacy
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+All entries and rates are stored in the browser's `localStorage` only. There
+is no backend, account, or sync — data stays on the device it was entered on
+and is lost if browser storage is cleared. Use the CSV/PDF export regularly
+if you want a backup, since there is currently no import mechanism.
 
-## Expanding the ESLint configuration
+## Tech stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- [React](https://react.dev/) 19 + [Vite](https://vite.dev/)
+- [Tailwind CSS](https://tailwindcss.com/) 4
+- [Recharts](https://recharts.org/) for charts
+- [jsPDF](https://github.com/parallax/jsPDF) + jspdf-autotable for PDF export
+- [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) for tests
 
-## The Utility Tracker SPA has been successfully implemented with a modern, responsive design and all requested features.
+## Getting started
 
-  #Key Features Implemented:
-   - Interactive Data Entry:
-       - Full utility block (Heating, Electricity Day/Night, Water, Gas, Rent) with dual-reading inputs and manual sum
-         editing.
-       - Specialized sections for Parking, Mortgage (ДержМолодь), and a dynamic list for Credit Cards (Mono, PUMB,
-         etc.).
-   - Live Calculations: The "Total to Pay" card updates instantly as you type, breaking down costs by category.
-   - Data Visualization:
-       - Trend Graph: Line chart showing spending over time.
-       - Distribution Chart: Pie chart highlighting where your money goes.
-   - Robust Storage: Integrated with localStorage to persist your history and rates between sessions.
-   - Professional Exports:
-       - PDF: Generates a clean receipt-style report.
-       - CSV: Exports full history for external analysis.
-   - Modern UI/UX: Built with React 19, Tailwind CSS 4, and Lucide Icons. The layout is mobile-optimized for easy entry
-     while standing at your meters.
-
-  #Technology Stack:
-   - Core: React (Vite)
-   - Styling: Tailwind CSS
-   - Visualization: Recharts
-   - Icons: Lucide React
-   - PDF Generation: jsPDF + AutoTable
-   
-## run
+```bash
+npm install
 npm run dev
+```
+
+Then open the printed local URL in your browser.
+
+## Scripts
+
+| Command            | Description                              |
+| ------------------ | ----------------------------------------- |
+| `npm run dev`       | Start the Vite dev server with HMR        |
+| `npm run build`     | Build for production into `dist/`         |
+| `npm run preview`   | Preview the production build locally      |
+| `npm run lint`      | Run ESLint                                |
+| `npm run test`      | Run the test suite once                   |
+| `npm run test:watch`| Run tests in watch mode                   |
+
+## Testing
+
+Tests cover the pure calculation/export utilities (`src/utils.js`) and the
+`useLocalStorage` hook, using Vitest with a jsdom environment:
+
+```bash
+npm run test
+```
