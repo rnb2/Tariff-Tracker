@@ -12,7 +12,12 @@ server.
   automatic sum calculation from current/previous readings and per-unit rates.
 - **Other payments** — parking, mortgage installments, and a dynamic list of
   credit card payments.
-- **History** — browse and manage past entries.
+- **History** — view, edit, delete, and export saved entries. Editing restores
+  the entry's original date, meter readings, utility amounts, and payments.
+- **Use as template** — start a new calculation from a saved entry. The new
+  calculation carries over utility amounts and recurring payments, moves each
+  available current meter reading into the previous-reading field, leaves
+  current readings blank, and uses today's date.
 - **Charts** — spending trend over time and cost distribution by category
   (Recharts).
 - **Export** — download history as CSV, or a single entry as a PDF receipt
