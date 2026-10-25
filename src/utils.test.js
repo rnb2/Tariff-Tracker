@@ -117,8 +117,27 @@ describe('buildDraftFromEntry', () => {
 
     const draft = buildDraftFromEntry(entry, utilityTypes);
 
-    expect(draft.utilities.gas).toEqual({ previous: 25, current: '', sum: 0 });
-    expect(draft.utilities.water).toEqual({ previous: 8, current: '', sum: 0 });
+    expect(draft.utilities.gas).toEqual({ previous: 25, current: '', sum: 45 });
+    expect(draft.utilities.water).toEqual({ previous: 8, current: '', sum: 15 });
+  });
+
+  it('restores all original fields when preparing an entry for editing', () => {
+    const entry = {
+      date: '2026-09-01',
+      utilities: { gas: { previous: 10, current: 25, sum: 45 }, water: { previous: 3, current: 8, sum: 15 } },
+      parking: 500,
+      creditCards: [{ name: 'Моно', amount: 1200 }],
+      mortgages: [{ name: 'ДержМолодь', amount: 3000 }],
+    };
+
+    const draft = buildDraftFromEntry(entry, utilityTypes, { forEditing: true });
+
+    expect(draft.date).toBe(entry.date);
+    expect(draft.utilities.gas).toEqual(entry.utilities.gas);
+    expect(draft.utilities.water).toEqual(entry.utilities.water);
+    expect(draft.parking).toBe(entry.parking);
+    expect(draft.creditCards).toEqual(entry.creditCards);
+    expect(draft.mortgages).toEqual(entry.mortgages);
   });
 
   it('falls back to the previous entry own previous reading when its current is blank', () => {

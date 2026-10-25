@@ -31,6 +31,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('input');
   const [rates, setRates] = useLocalStorage('utility_rates', INITIAL_RATES);
   const [history, setHistory] = useLocalStorage('utility_history', []);
+  const [editingEntryId, setEditingEntryId] = useState(null);
 
   // Pre-fill the input form from the most recent saved entry, so meter
   // "previous" readings and recurring payments carry over automatically.
@@ -98,7 +99,14 @@ function App() {
             draft={currentDraft}
             setDraft={setCurrentDraft}
             rates={rates}
+            editingEntryId={editingEntryId}
             onSave={(entry) => {
+              if (editingEntryId !== null) {
+                setHistory(history.map((item) => item.id === editingEntryId ? { ...entry, id: editingEntryId } : item));
+                setEditingEntryId(null);
+                setActiveTab('history');
+                return;
+              }
               setHistory([entry, ...history]);
               // Roll the form forward: next period's "previous" readings
               // and recurring payments start from what was just saved.
@@ -110,6 +118,11 @@ function App() {
           <HistoryView
             history={history}
             setHistory={setHistory}
+            onEditEntry={(entry) => {
+              setCurrentDraft(buildDraftFromEntry(entry, Object.values(UTILITY_TYPES), { forEditing: true }));
+              setEditingEntryId(entry.id);
+              setActiveTab('input');
+            }}
             onUseAsTemplate={(entry) => {
               setCurrentDraft(buildDraftFromEntry(entry, Object.values(UTILITY_TYPES)));
               setActiveTab('input');

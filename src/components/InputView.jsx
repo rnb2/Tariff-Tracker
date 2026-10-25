@@ -3,7 +3,7 @@ import { UTILITY_TYPES, LABELS, UNITS } from '../constants';
 import { calculateUtilitySum, formatCurrency, exportToPDF } from '../utils';
 import { Save, Plus, Trash2, FileDown } from 'lucide-react';
 
-export default function InputView({ draft, setDraft, rates, onSave }) {
+export default function InputView({ draft, setDraft, rates, onSave, editingEntryId = null }) {
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExportPDF = async () => {
@@ -77,7 +77,7 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
   const handleSave = () => {
     const entry = {
       ...draft,
-      id: Date.now(),
+      id: editingEntryId ?? Date.now(),
       total,
       // Convert string amounts to numbers for history
       parking: Math.round((parseFloat(draft.parking) || 0) * 100) / 100,
@@ -92,8 +92,8 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Новый расчет</h2>
-          <p className="text-slate-500 text-sm">Введите показания счетчиков и другие расходы</p>
+            <h2 className="text-2xl font-bold">{editingEntryId !== null ? 'Редактирование расчета' : 'Новый расчет'}</h2>
+            <p className="text-slate-500 text-sm">Введите показания счетчиков и другие расходы</p>
         </div>
         <div className="flex gap-2">
           <button 
@@ -109,7 +109,7 @@ export default function InputView({ draft, setDraft, rates, onSave }) {
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 shadow-sm transition-all active:scale-95"
           >
             <Save size={18} />
-            Сохранить
+            {editingEntryId !== null ? 'Сохранить изменения' : 'Сохранить'}
           </button>
         </div>
       </header>

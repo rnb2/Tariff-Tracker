@@ -15,18 +15,26 @@ export const calculateUtilitySum = (current, previous, rate) => {
   return Math.round((diff * numRate) * 100) / 100;
 };
 
-export const buildDraftFromEntry = (entry, utilityTypes) => {
+export const buildDraftFromEntry = (entry, utilityTypes, { forEditing = false } = {}) => {
   const utilities = {};
   utilityTypes.forEach((type) => {
     const prevData = entry?.utilities?.[type];
+    if (forEditing) {
+      utilities[type] = {
+        previous: prevData?.previous ?? '',
+        current: prevData?.current ?? '',
+        sum: prevData?.sum ?? 0,
+      };
+      return;
+    }
     const previous = prevData && prevData.current !== '' && prevData.current !== undefined
       ? prevData.current
       : (prevData?.previous ?? '');
-    utilities[type] = { previous, current: '', sum: 0 };
+    utilities[type] = { previous, current: '', sum: prevData?.sum ?? 0 };
   });
 
   return {
-    date: new Date().toISOString().split('T')[0],
+    date: forEditing ? (entry?.date ?? new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
     utilities,
     parking: entry?.parking ?? '',
     creditCards: (entry?.creditCards || []).map((c) => ({ name: c.name, amount: c.amount ?? '' })),
