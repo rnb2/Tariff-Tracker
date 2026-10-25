@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { formatCurrency, exportToCSV, buildEntryDetailRows } from '../utils';
-import { Trash2, Download, Copy, X } from 'lucide-react';
+import { Trash2, Download, Copy, X, Pencil } from 'lucide-react';
 import { LABELS } from '../constants';
 
-export default function HistoryView({ history, setHistory, onUseAsTemplate }) {
+export default function HistoryView({ history, setHistory, onUseAsTemplate, onEditEntry }) {
   const [viewingEntry, setViewingEntry] = useState(null);
 
   const deleteEntry = (id) => {
@@ -84,6 +84,13 @@ export default function HistoryView({ history, setHistory, onUseAsTemplate }) {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onEditEntry?.(entry); }}
+                          title="Редактировать запись"
+                          className="rounded-lg p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        >
+                          <Pencil size={18} />
+                        </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); onUseAsTemplate?.(entry); }}
                           title="Заполнить новый расчёт данными этой записи"
